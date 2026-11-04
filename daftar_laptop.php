@@ -8,84 +8,94 @@ if (!isset($_SESSION['session_login'])) {
     exit;
 }
 
-// Menyesuaikan pemanggilan file koneksi/function yang benar
-require 'koneksi.php';
+require_once 'koneksi.php';
+require_once 'function.php';
 
-// Pastikan fungsi tambah_laptop sudah ada di koneksi.php atau function.php yang Anda pakai
-if (isset($_POST['submit'])) {
-    if (tambah_laptop($_POST) > 0) {
-        echo "<script>
-                alert('Data laptop berhasil ditambahkan!');
-                document.location.href = 'daftar_laptop.php';
-              </script>";
-    } else {
-        echo "<script>
-                alert('Data laptop gagal ditambahkan!');
-              </script>";
-    }
+$data_laptop = query_db("SELECT * FROM laptop");
+
+if (isset($_POST["cari"])) {
+    $keyword = mysqli_real_escape_string($koneksi, $_POST["keyword"]);
+    $data_laptop = query_db("SELECT * FROM laptop WHERE merk_laptop LIKE '%$keyword%' OR spesifikasi LIKE '%$keyword%'");
 }
 ?>
 
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tambah Laptop - Sistem Sewa Laptop</title>
+    <title>Data Laptop - Sistem Sewa Laptop</title>
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
     <nav class="navbar-custom">
         <div class="nav-container">
-            <!-- Tautan kembali diarahkan dengan benar ke daftar_laptop.php -->
-            <a class="navbar-brand" href="daftar_laptop.php">&larr; Kembali ke Data Laptop</a>
-            <span style="color: var(--white); font-weight: 600;">Sistem Sewa Laptop</span>
+            <a class="navbar-brand" href="index.php">Sewa Laptop</a>
+            <ul class="navbar-nav">
+                <li><a href="index.php">Dashboard</a></li>
+                <li><a href="pelanggan.php">Data Pelanggan</a></li>
+                <li><a href="daftar_laptop.php" class="active">Data Laptop</a></li>
+                <li><a href="transaksi.php">Data Transaksi</a></li>
+                <li><a href="logout.php" class="text-danger">Logout</a></li>
+            </ul>
         </div>
     </nav>
 
-    <div class="main-container" style="max-width: 600px;">
-        <div class="form-card">
-            <h3 style="margin-bottom: 25px; color: var(--primary-color);">Form Tambah Laptop Baru</h3>
+    <div class="main-container" style="max-width: 1000px;">
+        <div class="form-card" style="max-width: 100%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="color: var(--primary-color);">Daftar Laptop Tersedia</h3>
+                <a href="tambah_laptop.php" class="btn btn-primary" style="width: auto; padding: 10px 20px; text-decoration: none;">+ Tambah Laptop</a>
+            </div>
 
-            <form action="" method="POST" enctype="multipart/form-data">
-                <div class="form-group">
-                    <label for="merk_laptop">Merk & Tipe Laptop</label>
-                    <input type="text" name="merk_laptop" class="form-control" placeholder="Contoh: Asus ROG / Lenovo" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="spesifikasi">Spesifikasi</label>
-                    <textarea name="spesifikasi" class="form-control" rows="3" placeholder="Contoh: Core i5, RAM 8GB" required></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="harga_sewa_per_hari">Harga Sewa per Hari (Rp)</label>
-                    <input type="number" name="harga_sewa_per_hari" class="form-control" placeholder="Contoh: 75000" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="stok">Jumlah Stok Unit</label>
-                    <input type="number" name="stok" class="form-control" placeholder="Contoh: 5" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="gambar">Foto Laptop</label>
-                    <input type="file" name="gambar" class="form-control" required style="padding: 7px;">
-                </div>
-
-                <div class="button-group" style="display: flex; gap: 10px; margin-top: 25px;">
-                    <button type="submit" name="submit" class="btn btn-primary" style="flex: 1;">Simpan Laptop</button>
-                    <!-- Tombol Batal diarahkan langsung ke daftar_laptop.php -->
-                    <a href="daftar_laptop.php" class="btn btn-outline-secondary" style="flex: 1; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center;">Batal</a>
-                </div>
+            <form action="" method="POST" style="margin-bottom: 20px; display: flex; gap: 10px;">
+                <input type="text" name="keyword" class="form-control" placeholder="Cari merk atau spesifikasi laptop..." style="max-width: 350px;" autocomplete="off">
+                <button type="submit" name="cari" class="btn btn-primary" style="width: auto; padding: 10px 20px;">Cari</button>
             </form>
+
+            <div style="overflow-x: auto;">
+                <table border="1" cellpadding="10" cellspacing="0" style="width: 100%; border-collapse: collapse; border-color: var(--border-color);">
+                    <thead>
+                        <tr style="background-color: var(--bg-light); text-align: left;">
+                            <th>No</th>
+                            <th>Gambar</th>
+                            <th>Merk Laptop</th>
+                            <th>Spesifikasi</th>
+                            <th>Harga Sewa / Hari</th>
+                            <th>Stok</th>
+                            <th style="text-align: center;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($data_laptop)) : ?>
+                            <tr>
+                                <td colspan="7" style="text-align: center; padding: 20px; color: #7f8c8d;">Belum ada data laptop yang tersedia.</td>
+                            </tr>
+                        <?php endif; ?>
+
+                        <?php $no = 1; ?>
+                        <?php foreach ($data_laptop as $laptop): ?>
+                        <tr>
+                            <td><?= $no++; ?></td>
+                            <td>
+                                <img src="img/<?= htmlspecialchars($laptop["gambar"]); ?>" alt="Laptop" width="70" style="border-radius: 6px; object-fit: cover; height: 50px;">
+                            </td>
+                            <td><?= htmlspecialchars($laptop["merk_laptop"]); ?></td>
+                            <td><?= htmlspecialchars($laptop["spesifikasi"]); ?></td>
+                            <td>Rp <?= number_format($laptop["harga_sewa_per_hari"], 0, ',', '.'); ?></td>
+                            <td><?= htmlspecialchars($laptop["stok"]); ?> Unit</td>
+                            <td style="text-align: center;">
+                                <a href="edit_laptop.php?id_laptop=<?= $laptop["id_laptop"]; ?>" class="btn btn-warning btn-sm" style="background: #f39c12; color: #fff; padding: 6px 12px; border-radius: 4px; text-decoration: none; display: inline-block; margin-right: 5px;">Edit</a>
+                                <a href="hapus_laptop.php?id_laptop=<?= $laptop["id_laptop"]; ?>" class="btn btn-danger btn-sm" onclick="return confirm('Yakin ingin menghapus data laptop ini?');" style="background: #e74c3c; color: #fff; padding: 6px 12px; border-radius: 4px; text-decoration: none; display: inline-block;">Hapus</a>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
-    <script src="script.js"></script>
 </body>
-
 </html>
