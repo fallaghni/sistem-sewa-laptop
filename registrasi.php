@@ -5,10 +5,11 @@ $pass = "";
 $db   = "db_sewa_laptop"; 
 
 $koneksi = mysqli_connect($host, $user, $pass, $db);
+$conn = $koneksi; 
+
 if (!$koneksi) {
     die("Koneksi database gagal: " . mysqli_connect_error());
 }
-
 
 if (!function_exists('query_db')) {
     function query_db($query)

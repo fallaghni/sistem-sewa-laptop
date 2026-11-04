@@ -12,7 +12,6 @@ require_once 'koneksi.php';
 
 $id_pelanggan = (int) $_GET['id_pelanggan'];
 
-
 $cek = mysqli_query($conn, "SELECT * FROM transaksi WHERE id_pelanggan = $id_pelanggan");
 
 if (mysqli_num_rows($cek) > 0) {
